@@ -1,0 +1,78 @@
+---
+title: "Principal Component Regression for Intro to Data Science Project"
+author: "Bill Sendewicz, Lars Bosgraaf, Stas Sochynskyi"
+date: "12/7/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### Just as Principal Component Analysis can be used in a classification problem to select the most important or useful features, Principal Component Regression (PCR) is used in regression problems. Since we have 243 numerical features after one-hot encoding, I tried using PCR to find the optimal number of features to use in our regression model.
+```{r}
+library(pls)
+
+housing <- read.csv("train_cleaned.csv")
+
+# train_cleaned.csv is a file containing the full set of features with categorical features that have been one-hot encoded and numeric features left as-is. 
+
+head(housing)
+```
+
+### Just to check that all features contain numeric values.
+```{r include=FALSE}
+uniq <- unique(housing)
+uniq
+
+```
+
+### Just one line of code to run PCR and another line to plot the results. Scale = T means that each feature will be standardized prior to generating the principal components, so that the scale of each feature won't have an effect. Setting validation = "CV" computes the ten-fold cross-validation error for each possible value of M, the number of components.
+```{r include=FALSE}
+# fit <- pcr(SalePrice~., data = housing, scale = T, validation = "CV")
+# validationplot(fit, val.type = "MSEP")
+```
+
+### Unfortunately for us, PCR was not possible on this dataset. Because we ran one-hot encoding on the features that were initially categorical, generating vectors of features that are only 1s or 0s, with most columns having mostly 0 values, the standard deviation of these columns was near 0. Hence, R threw an error.
+
+
+### Instead of using the entire dataset that included one-hot-encoded categorical features, if I tried running PCR on only the features that were initially numeric, the PCR procedure ran successfully.
+
+```{r}
+housing_only_numeric <- read.csv("train_cleaned2.csv")
+
+# trained_cleaned2.csv removes only the one-hot-encoded numeric columns.
+
+head(housing_only_numeric)
+```
+
+```{r}
+fit <- pcr(SalePrice~., data = housing_only_numeric, scale = T, validation = "CV")
+summary(fit)
+```
+
+
+```{r}
+validationplot(fit, val.type = "MSEP")
+```
+
+### At this point, there's nothing in the graph of the MSEP (mean squared error of prediction) as a function of the number of components that suggests an optimal number of components. 
+
+### Had our MSEP vs. components plot looked like this, it would have been possible to choose a reduced number of components: 
+
+
+```{r include=FALSE}
+library(knitr)    # For knitting document and include_graphics function
+library(ggplot2)  # For plotting
+library(png)      # For grabbing the dimensions of png files
+
+img1_path <- "PCR_example.jpg"
+img1 <- readPNG(img1_path, native = TRUE, info = TRUE)
+```
+
+```{r}
+include_graphics(img1_path)
+```
+
+
